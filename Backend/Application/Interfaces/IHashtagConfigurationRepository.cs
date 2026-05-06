@@ -9,4 +9,5 @@ public interface IHashtagConfigurationRepository
     Task<HashtagConfiguration?> GetByNormalizedHashtagAsync(string normalized, CancellationToken ct);
     Task<HashtagConfiguration> AddAsync(HashtagConfiguration entity, CancellationToken ct);
     Task UpdateAsync(HashtagConfiguration entity, CancellationToken ct);
+    Task<bool> DeleteAsync(Guid id, CancellationToken ct);
 }

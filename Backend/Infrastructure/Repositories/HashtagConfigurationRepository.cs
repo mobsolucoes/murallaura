@@ -32,4 +32,17 @@ public class HashtagConfigurationRepository : IHashtagConfigurationRepository
         _db.HashtagConfigurations.Update(entity);
         await _db.SaveChangesAsync(ct);
     }
+
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken ct)
+    {
+        var deletedLogs = await _db.IntegrationLogs
+            .Where(x => x.HashtagConfigurationId == id)
+            .ExecuteDeleteAsync(ct);
+
+        var deletedHashtags = await _db.HashtagConfigurations
+            .Where(x => x.Id == id)
+            .ExecuteDeleteAsync(ct);
+
+        return deletedHashtags > 0 || deletedLogs > 0;
+    }
 }

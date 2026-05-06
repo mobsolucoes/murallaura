@@ -7,6 +7,7 @@ export default function DashboardPage() {
   const [hashtags, setHashtags] = useState<HashtagConfiguration[]>([])
   const [statsMap, setStatsMap] = useState<Record<string, DashboardStats>>({})
   const [loading, setLoading] = useState(true)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -33,6 +34,24 @@ export default function DashboardPage() {
       cancelled = true
     }
   }, [])
+
+  async function handleDelete(id: string, hashtag: string) {
+    const confirmed = window.confirm(`Excluir a hashtag #${hashtag}? Essa ação não pode ser desfeita.`)
+    if (!confirmed) return
+
+    try {
+      setDeletingId(id)
+      await api.delete(`/api/admin/hashtags/${id}`)
+      setHashtags((prev) => prev.filter((h) => h.id !== id))
+      setStatsMap((prev) => {
+        const next = { ...prev }
+        delete next[id]
+        return next
+      })
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   return (
     <div className="page">
@@ -103,6 +122,13 @@ export default function DashboardPage() {
                   <Link className="btn ghost sm" to={`/hashtags/${h.id}/edit`}>
                     Editar
                   </Link>
+                  <button
+                    className="btn ghost sm"
+                    onClick={() => handleDelete(h.id, h.hashtag)}
+                    disabled={deletingId === h.id}
+                  >
+                    {deletingId === h.id ? 'Excluindo…' : 'Excluir'}
+                  </button>
                 </div>
               </article>
             )

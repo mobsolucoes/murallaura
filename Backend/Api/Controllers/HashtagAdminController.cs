@@ -122,6 +122,16 @@ public sealed class HashtagAdminController : ControllerBase
         return Ok(new DashboardStatsDto(stats.Total, stats.Approved, stats.Pending, stats.Rejected));
     }
 
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        var deleted = await _hashtags.DeleteAsync(id, ct);
+        if (!deleted)
+            return NotFound();
+
+        return NoContent();
+    }
+
     private static HashtagConfigurationDto Map(HashtagConfiguration h) =>
         new(
             h.Id,

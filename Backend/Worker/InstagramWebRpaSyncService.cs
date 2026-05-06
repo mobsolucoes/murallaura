@@ -201,7 +201,13 @@ public sealed class InstagramWebRpaSyncService
         var hashtagUrl = $"https://www.instagram.com/explore/tags/{hashtag.Trim().TrimStart('#')}/";
         await page.GotoAsync(hashtagUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
         EnsureNoCheckpointOrTwoFactor(page.Url, opt);
-        await page.WaitForSelectorAsync("a[href*='/p/'],a[href*='/reel/']");
+        var hasPosts = await WaitForPostsOrEmptyStateAsync(page, opt.NavigationTimeoutMs);
+        if (!hasPosts)
+        {
+            _logger.LogWarning("No posts found (or page not exposing post links) for #{Tag}. Returning empty batch.", hashtag);
+            await context.CloseAsync();
+            return Array.Empty<ScrapedPost>();
+        }
         _logger.LogInformation("Hashtag page loaded for #{Tag}.", hashtag);
 
         var links = await page.EvaluateAsync<string[]>(
@@ -273,6 +279,32 @@ public sealed class InstagramWebRpaSyncService
 
     private static bool NeedsLogin(string currentUrl) =>
         currentUrl.Contains("/accounts/login", StringComparison.OrdinalIgnoreCase);
+
+    private static async Task<bool> WaitForPostsOrEmptyStateAsync(IPage page, int timeoutMs)
+    {
+        var selector = "a[href*='/p/'],a[href*='/reel/']";
+        var deadline = DateTime.UtcNow.AddMilliseconds(Math.Max(timeoutMs, 1000));
+
+        while (DateTime.UtcNow < deadline)
+        {
+            var links = await page.QuerySelectorAllAsync(selector);
+            if (links.Count > 0)
+                return true;
+
+            var bodyText = (await page.Locator("body").InnerTextAsync()).ToLowerInvariant();
+            if (bodyText.Contains("nenhuma publicação") ||
+                bodyText.Contains("no posts yet") ||
+                bodyText.Contains("sem publicações"))
+            {
+                return false;
+            }
+
+            await page.Mouse.WheelAsync(0, 1200);
+            await page.WaitForTimeoutAsync(1000);
+        }
+
+        return false;
+    }
 
     private static void EnsureNoCheckpointOrTwoFactor(string currentUrl, InstagramWebRpaOptions opt)
     {
