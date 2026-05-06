@@ -76,6 +76,9 @@ services:
     build:
       context: .
       dockerfile: Frontend/admin/Dockerfile
+      args:
+        VITE_API_URL: http://84.247.141.109:8500
+        VITE_WALL_ORIGIN: http://84.247.141.109:8502
     container_name: murallaura-admin
     restart: unless-stopped
     ports:
@@ -89,6 +92,8 @@ services:
     build:
       context: .
       dockerfile: Frontend/wall/Dockerfile
+      args:
+        VITE_API_URL: http://84.247.141.109:8500
     container_name: murallaura-wall
     restart: unless-stopped
     ports:
