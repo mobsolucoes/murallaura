@@ -27,7 +27,7 @@ services:
     container_name: murallaura-api
     restart: unless-stopped
     environment:
-      ASPNETCORE_URLS: http://0.0.0.0:8500
+      ASPNETCORE_URLS: http://84.247.141.109:8500
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=hashtagwall;Username=postgres;Password=postgres
       Jwt__Issuer: HashtagWall
