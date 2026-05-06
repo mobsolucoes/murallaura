@@ -51,13 +51,16 @@ public sealed class MetaOAuthFlow
         var state = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
         _cache.Set(PendingPrefix + state, new OAuthPending(adminUserId, returnPath), PendingTtl);
 
-        var scopes = Uri.EscapeDataString(_opt.Scopes.Replace(" ", ""));
+        var scopesRaw = (_opt.Scopes ?? string.Empty).Replace(" ", string.Empty).Trim();
         var redirect = Uri.EscapeDataString(_opt.RedirectUri.Trim());
         var version = _opt.GraphApiVersion.Trim();
+        var scopeQuery = string.IsNullOrWhiteSpace(scopesRaw)
+            ? string.Empty
+            : $"&scope={Uri.EscapeDataString(scopesRaw)}";
 
         return
             $"https://www.facebook.com/{version}/dialog/oauth?client_id={Uri.EscapeDataString(_opt.AppId.Trim())}" +
-            $"&redirect_uri={redirect}&state={state}&scope={scopes}&response_type=code";
+            $"&redirect_uri={redirect}&state={state}{scopeQuery}&response_type=code";
     }
 
     /// <summary>Callback da Meta: troca code por token longo e resolve IG Business Account ID.</summary>
