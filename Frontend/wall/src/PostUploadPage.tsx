@@ -57,11 +57,13 @@ export default function PostUploadPage() {
         <h2>Postar no mural</h2>
         <p className="upload-muted">Hashtag: #{hashtag}</p>
         <form onSubmit={onSubmit} className="upload-form">
-          <label>
-            Arquivo (jpg, png, webp, mp4, mov, webm)
+          <label className="upload-label">
+            Arquivo
             <input id="file-input" type="file" accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <small className="upload-hint">Formatos: jpg, png, webp, mp4, mov, webm.</small>
+            {file ? <span className="upload-selected">{file.name}</span> : null}
           </label>
-          <label>
+          <label className="upload-label">
             Legenda
             <textarea rows={4} value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Escreva uma legenda..." />
           </label>
