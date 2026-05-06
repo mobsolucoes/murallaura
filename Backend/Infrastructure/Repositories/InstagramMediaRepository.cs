@@ -21,7 +21,9 @@ public class InstagramMediaRepository : IInstagramMediaRepository
     public async Task<IReadOnlyList<InstagramMediaPost>> ListApprovedByHashtagAsync(Guid hashtagConfigId, CancellationToken ct) =>
         await _db.InstagramMediaPosts.AsNoTracking()
             .Where(m => m.HashtagConfigurationId == hashtagConfigId && m.Status == MediaPostStatus.Approved)
-            .OrderBy(m => m.Timestamp)
+            // UpdatedAt is touched on approval/re-approval, so this reflects approval recency.
+            .OrderByDescending(m => m.UpdatedAt)
+            .ThenByDescending(m => m.Timestamp)
             .ToListAsync(ct);
 
     public async Task<InstagramMediaPost?> GetByIdAsync(Guid id, CancellationToken ct) =>
