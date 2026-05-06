@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-HashtagWall.Worker-2f36dba7-d329-45a2-b66e-21a71ef6b2af</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Application\HashtagWall.Application.csproj" />
+    <ProjectReference Include="..\Infrastructure\HashtagWall.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

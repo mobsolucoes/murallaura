@@ -1,0 +1,6 @@
+@HashtagWall.Api_HostAddress = http://localhost:5233
+
+GET {{HashtagWall.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

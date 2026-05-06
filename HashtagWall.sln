@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{6FC8659B-9657-40F0-A1C4-88F97FB51B7A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HashtagWall.Domain", "Backend\Domain\HashtagWall.Domain.csproj", "{2E85D12E-5E7D-459D-A33A-099BB5D167C7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HashtagWall.Application", "Backend\Application\HashtagWall.Application.csproj", "{D6F6C986-5FAC-43EE-8D48-51C74CD06FB7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HashtagWall.Infrastructure", "Backend\Infrastructure\HashtagWall.Infrastructure.csproj", "{F3198CA2-FEE1-413E-9CD9-C07AFA5A7705}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HashtagWall.Api", "Backend\Api\HashtagWall.Api.csproj", "{28CE2049-A510-4BE3-9894-76B2A3D636F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HashtagWall.Worker", "Backend\Worker\HashtagWall.Worker.csproj", "{E42DC935-641E-41FE-A146-9104B8639D88}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2E85D12E-5E7D-459D-A33A-099BB5D167C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E85D12E-5E7D-459D-A33A-099BB5D167C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E85D12E-5E7D-459D-A33A-099BB5D167C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E85D12E-5E7D-459D-A33A-099BB5D167C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6F6C986-5FAC-43EE-8D48-51C74CD06FB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6F6C986-5FAC-43EE-8D48-51C74CD06FB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6F6C986-5FAC-43EE-8D48-51C74CD06FB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6F6C986-5FAC-43EE-8D48-51C74CD06FB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3198CA2-FEE1-413E-9CD9-C07AFA5A7705}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3198CA2-FEE1-413E-9CD9-C07AFA5A7705}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3198CA2-FEE1-413E-9CD9-C07AFA5A7705}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3198CA2-FEE1-413E-9CD9-C07AFA5A7705}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28CE2049-A510-4BE3-9894-76B2A3D636F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28CE2049-A510-4BE3-9894-76B2A3D636F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28CE2049-A510-4BE3-9894-76B2A3D636F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28CE2049-A510-4BE3-9894-76B2A3D636F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E42DC935-641E-41FE-A146-9104B8639D88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E42DC935-641E-41FE-A146-9104B8639D88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E42DC935-641E-41FE-A146-9104B8639D88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E42DC935-641E-41FE-A146-9104B8639D88}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2E85D12E-5E7D-459D-A33A-099BB5D167C7} = {6FC8659B-9657-40F0-A1C4-88F97FB51B7A}
+		{D6F6C986-5FAC-43EE-8D48-51C74CD06FB7} = {6FC8659B-9657-40F0-A1C4-88F97FB51B7A}
+		{F3198CA2-FEE1-413E-9CD9-C07AFA5A7705} = {6FC8659B-9657-40F0-A1C4-88F97FB51B7A}
+		{28CE2049-A510-4BE3-9894-76B2A3D636F1} = {6FC8659B-9657-40F0-A1C4-88F97FB51B7A}
+		{E42DC935-641E-41FE-A146-9104B8639D88} = {6FC8659B-9657-40F0-A1C4-88F97FB51B7A}
+	EndGlobalSection
+EndGlobal
