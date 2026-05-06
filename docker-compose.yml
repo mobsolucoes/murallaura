@@ -42,8 +42,8 @@ services:
       MetaOAuth__GraphApiVersion: v21.0
       MetaOAuth__RedirectUri: https://apimurallaura.bloky.com.br/api/public/meta/oauth/callback
       MetaOAuth__FrontendBaseUrl: https://murallaura.bloky.com.br
-      MetaOAuth__AppId: 1475668974052298
-      MetaOAuth__AppSecret: b829c7e673dc6bc4917d1dae70c216f3
+      MetaOAuth__AppId: 1464835804581108
+      MetaOAuth__AppSecret: a1fec2e1c550d24247f0765d9924bc2d
       MetaOAuth__Scopes: ""
     ports:
       - "8500:8500"
