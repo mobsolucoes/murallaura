@@ -20,7 +20,10 @@ services:
       retries: 10
 
   api:
-    image: seuusuario/murallaura-api:latest
+    image: murallaura-api:local
+    build:
+      context: .
+      dockerfile: Backend/Api/Dockerfile
     container_name: murallaura-api
     restart: unless-stopped
     environment:
@@ -49,7 +52,10 @@ services:
         condition: service_healthy
 
   worker:
-    image: seuusuario/murallaura-worker:latest
+    image: murallaura-worker:local
+    build:
+      context: .
+      dockerfile: Backend/Worker/Dockerfile
     container_name: murallaura-worker
     restart: unless-stopped
     environment:
@@ -66,7 +72,10 @@ services:
         condition: service_started
 
   admin:
-    image: seuusuario/murallaura-admin:latest
+    image: murallaura-admin:local
+    build:
+      context: .
+      dockerfile: Frontend/admin/Dockerfile
     container_name: murallaura-admin
     restart: unless-stopped
     ports:
@@ -76,7 +85,10 @@ services:
         condition: service_started
 
   wall:
-    image: seuusuario/murallaura-wall:latest
+    image: murallaura-wall:local
+    build:
+      context: .
+      dockerfile: Frontend/wall/Dockerfile
     container_name: murallaura-wall
     restart: unless-stopped
     ports:
