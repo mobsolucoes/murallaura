@@ -21,69 +21,6 @@ body {
   flex-direction: column;
 }
 
-.wall-header {
-  position: sticky;
-  top: 0;
-  z-index: 4;
-  padding: 0.8rem 2rem;
-  border-bottom: 1px solid #dbdbdb;
-  background: #ffffff;
-}
-
-.ig-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-}
-
-.brand-line {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.wall-logo {
-  height: 56px;
-  width: auto;
-  border-radius: 14px;
-}
-
-.wall-header h1 {
-  margin: 0;
-  font-size: clamp(1.2rem, 2vw, 1.55rem);
-  letter-spacing: -0.02em;
-  color: #111827;
-}
-
-.hash-line {
-  margin: 0.15rem 0 0;
-  color: #6b7280;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.top-actions {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.post-link {
-  border-radius: 8px;
-  padding: 0.5rem 0.8rem;
-  text-decoration: none;
-  color: #111827;
-  border: 1px solid #dbdbdb;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.post-link.primary {
-  background: #0095f6;
-  border-color: #0095f6;
-  color: white;
-}
-
 .wall-main {
   flex: 1;
   display: flex;
@@ -309,14 +246,6 @@ body {
 }
 
 @media (max-width: 720px) {
-  .wall-header {
-    padding: 0.65rem 0.8rem;
-  }
-
-  .top-actions {
-    display: none;
-  }
-
   .wall-main {
     padding: 0.65rem 0.4rem 5rem;
   }

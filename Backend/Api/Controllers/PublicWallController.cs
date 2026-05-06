@@ -91,7 +91,7 @@ public sealed class PublicWallController : ControllerBase
             await req.File.CopyToAsync(fs, ct);
         }
 
-        var publicUrl = $"{Request.Scheme}://{Request.Host}/uploads/{fileName}";
+        var publicUrl = BuildAbsoluteUploadUrl(fileName);
         var now = DateTimeOffset.UtcNow;
         var entity = new InstagramMediaPost
         {
@@ -131,19 +131,40 @@ public sealed class PublicWallController : ControllerBase
             w.ShowCaption,
             w.ShowQrCode);
 
-    private static InstagramMediaPostDto MapPost(InstagramMediaPost m) =>
+    private InstagramMediaPostDto MapPost(InstagramMediaPost m) =>
         new(
             m.Id,
             m.InstagramMediaId,
             m.Hashtag,
             m.Caption,
-            m.MediaUrl,
-            m.ThumbnailUrl,
+            ToClientMediaUrl(m.MediaUrl),
+            ToClientMediaUrl(m.ThumbnailUrl),
             m.Permalink,
             m.MediaType,
             m.Timestamp,
             m.Status,
             m.CreatedAt);
+
+    private string BuildAbsoluteUploadUrl(string fileName) =>
+        $"{Request.Scheme}://{Request.Host}/uploads/{fileName}";
+
+    private string? ToClientMediaUrl(string? rawUrl)
+    {
+        if (string.IsNullOrWhiteSpace(rawUrl))
+            return rawUrl;
+
+        if (rawUrl.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+            return $"{Request.Scheme}://{Request.Host}{rawUrl}";
+
+        if (!Uri.TryCreate(rawUrl, UriKind.Absolute, out var uri))
+            return rawUrl;
+
+        // Normalize uploaded files to the current public host/scheme (avoids mixed content and internal hosts).
+        if (uri.AbsolutePath.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+            return $"{Request.Scheme}://{Request.Host}{uri.AbsolutePath}";
+
+        return rawUrl;
+    }
 
     public sealed class PublicUploadRequest
     {

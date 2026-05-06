@@ -2,7 +2,7 @@ import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import { QRCodeSVG } from 'qrcode.react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { api, apiBaseUrl } from './api'
 import type { InstagramMediaPost, WallConfiguration } from './types'
 
@@ -84,44 +84,24 @@ export default function WallScreen() {
 
   return (
     <div className="wall-root" style={themeVars}>
-      <header className="wall-header">
-        <div className="ig-top">
-          <div className="brand-line">
-            {cfg?.logoUrl ? <img className="wall-logo" src={cfg.logoUrl} alt="" /> : null}
-            <div>
-              <h1>{cfg?.title ?? `#${hashtag}`}</h1>
-              <p className="hash-line">#{hashtag}</p>
-            </div>
-          </div>
-          <div className="top-actions">
-            <a className="post-link" href={`https://www.instagram.com/explore/tags/${encodeURIComponent(hashtag)}/`} target="_blank" rel="noreferrer">
-              Ver no Instagram
-            </a>
-            <Link className="post-link primary" to={`/wall/${encodeURIComponent(hashtag)}/post`}>
-              Postar no mural
-            </Link>
-          </div>
-        </div>
-      </header>
-
       <main className="wall-main">
-        {posts.length === 0 ? (
-          <div className="waiting card">
-            <p className="waiting-title">Poste sua foto no Instagram usando</p>
-            <p className="waiting-tag">#{hashtag}</p>
-            <p className="waiting-sub">As fotos aparecem aqui após moderação.</p>
-          </div>
-        ) : (
-          <div className="feed-wrap">
-            {cfg?.showQrCode !== false ? (
-              <div className="feed-cta">
-                <div className="qr-box">
-                  <QRCodeSVG value={qrValue} size={108} bgColor="transparent" fgColor="#111111" />
-                  <span>Poste sua foto/video direto na plataforma</span>
-                </div>
+        <div className="feed-wrap">
+          {cfg?.showQrCode !== false ? (
+            <div className="feed-cta">
+              <div className="qr-box">
+                <QRCodeSVG value={qrValue} size={108} bgColor="transparent" fgColor="#111111" />
+                <span>Poste sua foto/video direto na plataforma</span>
               </div>
-            ) : null}
+            </div>
+          ) : null}
 
+          {posts.length === 0 ? (
+            <div className="waiting card">
+              <p className="waiting-title">Poste sua foto no Instagram usando</p>
+              <p className="waiting-tag">#{hashtag}</p>
+              <p className="waiting-sub">As fotos aparecem aqui após moderação.</p>
+            </div>
+          ) : (
             <div className="feed-list">
               {posts.map((post) => {
                 const imgUrl = post.mediaUrl ?? post.thumbnailUrl ?? ''
@@ -164,8 +144,8 @@ export default function WallScreen() {
                 )
               })}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </main>
       <nav className="ig-mobile-nav" aria-hidden>
         <HomeIcon />

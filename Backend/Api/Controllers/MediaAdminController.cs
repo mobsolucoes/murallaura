@@ -65,17 +65,34 @@ public sealed class MediaAdminController : ControllerBase
         return NoContent();
     }
 
-    private static InstagramMediaPostDto Map(InstagramMediaPost m) =>
+    private InstagramMediaPostDto Map(InstagramMediaPost m) =>
         new(
             m.Id,
             m.InstagramMediaId,
             m.Hashtag,
             m.Caption,
-            m.MediaUrl,
-            m.ThumbnailUrl,
+            ToClientMediaUrl(m.MediaUrl),
+            ToClientMediaUrl(m.ThumbnailUrl),
             m.Permalink,
             m.MediaType,
             m.Timestamp,
             m.Status,
             m.CreatedAt);
+
+    private string? ToClientMediaUrl(string? rawUrl)
+    {
+        if (string.IsNullOrWhiteSpace(rawUrl))
+            return rawUrl;
+
+        if (rawUrl.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+            return $"{Request.Scheme}://{Request.Host}{rawUrl}";
+
+        if (!Uri.TryCreate(rawUrl, UriKind.Absolute, out var uri))
+            return rawUrl;
+
+        if (uri.AbsolutePath.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+            return $"{Request.Scheme}://{Request.Host}{uri.AbsolutePath}";
+
+        return rawUrl;
+    }
 }
