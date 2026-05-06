@@ -53,7 +53,7 @@ services:
 
   admin:
     image: node:20-alpine
-    working_dir: /app/Frontend/admin
+    working_dir: /app
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
     environment:
       VITE_API_URL: http://localhost:8500
@@ -61,23 +61,23 @@ services:
     ports:
       - "8501:5173"
     volumes:
-      - ./:/app
-      - admin_node_modules:/app/Frontend/admin/node_modules
+      - ./Frontend/admin:/app
+      - admin_node_modules:/app/node_modules
     depends_on:
       api:
         condition: service_started
 
   wall:
     image: node:20-alpine
-    working_dir: /app/Frontend/wall
+    working_dir: /app
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5174"
     environment:
       VITE_API_URL: http://localhost:8500
     ports:
       - "8502:5174"
     volumes:
-      - ./:/app
-      - wall_node_modules:/app/Frontend/wall/node_modules
+      - ./Frontend/wall:/app
+      - wall_node_modules:/app/node_modules
     depends_on:
       api:
         condition: service_started
