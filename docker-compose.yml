@@ -15,5 +15,75 @@ services:
       timeout: 3s
       retries: 20
 
+  api:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    working_dir: /app/Backend/Api
+    command: >
+      sh -c "dotnet restore ../HashtagWall.sln &&
+             dotnet run --urls http://0.0.0.0:5233"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=hashtagwall;Username=postgres;Password=postgres
+    ports:
+      - "5233:5233"
+    volumes:
+      - ./:/app
+      - nuget:/root/.nuget/packages
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  worker:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    working_dir: /app/Backend/Worker
+    command: >
+      sh -c "dotnet restore ../HashtagWall.sln &&
+             dotnet run"
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=hashtagwall;Username=postgres;Password=postgres
+    volumes:
+      - ./:/app
+      - nuget:/root/.nuget/packages
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_started
+
+  admin:
+    image: node:20-alpine
+    working_dir: /app/Frontend/admin
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0 --port 5173"
+    environment:
+      VITE_API_URL: http://localhost:5233
+      VITE_WALL_ORIGIN: http://localhost:5174
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./:/app
+      - admin_node_modules:/app/Frontend/admin/node_modules
+    depends_on:
+      api:
+        condition: service_started
+
+  wall:
+    image: node:20-alpine
+    working_dir: /app/Frontend/wall
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0 --port 5174"
+    environment:
+      VITE_API_URL: http://localhost:5233
+    ports:
+      - "5174:5174"
+    volumes:
+      - ./:/app
+      - wall_node_modules:/app/Frontend/wall/node_modules
+    depends_on:
+      api:
+        condition: service_started
+
 volumes:
   pgdata:
+  nuget:
+  admin_node_modules:
+  wall_node_modules:
