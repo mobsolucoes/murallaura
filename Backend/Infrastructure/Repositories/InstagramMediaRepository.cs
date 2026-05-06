@@ -26,6 +26,16 @@ public class InstagramMediaRepository : IInstagramMediaRepository
             .ThenByDescending(m => m.Timestamp)
             .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<InstagramMediaPost>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct)
+    {
+        if (ids.Count == 0)
+            return Array.Empty<InstagramMediaPost>();
+
+        return await _db.InstagramMediaPosts.AsNoTracking()
+            .Where(m => ids.Contains(m.Id))
+            .ToListAsync(ct);
+    }
+
     public async Task<InstagramMediaPost?> GetByIdAsync(Guid id, CancellationToken ct) =>
         await _db.InstagramMediaPosts.FirstOrDefaultAsync(m => m.Id == id, ct);
 
@@ -43,6 +53,24 @@ public class InstagramMediaRepository : IInstagramMediaRepository
     {
         _db.InstagramMediaPosts.Update(entity);
         await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken ct)
+    {
+        var deleted = await _db.InstagramMediaPosts
+            .Where(m => m.Id == id)
+            .ExecuteDeleteAsync(ct);
+        return deleted > 0;
+    }
+
+    public async Task<int> DeleteManyAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct)
+    {
+        if (ids.Count == 0)
+            return 0;
+
+        return await _db.InstagramMediaPosts
+            .Where(m => ids.Contains(m.Id))
+            .ExecuteDeleteAsync(ct);
     }
 
     public async Task<DashboardAggregate> GetDashboardStatsAsync(Guid hashtagConfigId, CancellationToken ct)

@@ -7,11 +7,13 @@ export default function ModerationPage() {
   const { id } = useParams<{ id: string }>()
   const [items, setItems] = useState<InstagramMediaPost[]>([])
   const [loading, setLoading] = useState(true)
+  const [selected, setSelected] = useState<string[]>([])
 
   async function reload() {
     if (!id) return
     const { data } = await api.get<InstagramMediaPost[]>(`/api/admin/hashtags/${id}/media`)
     setItems(data)
+    setSelected((prev) => prev.filter((x) => data.some((m) => m.id === x)))
   }
 
   useEffect(() => {
@@ -42,6 +44,21 @@ export default function ModerationPage() {
     await reload()
   }
 
+  async function deleteOne(postId: string) {
+    await api.delete(`/api/admin/media/${postId}`)
+    await reload()
+  }
+
+  async function deleteSelected() {
+    if (!id || selected.length === 0) return
+    await api.post('/api/admin/media/bulk-delete', {
+      hashtagConfigId: id,
+      postIds: selected,
+    })
+    await reload()
+    setSelected([])
+  }
+
   async function syncNow() {
     if (!id) return
     await api.post(`/api/admin/hashtags/${id}/sync`)
@@ -60,6 +77,12 @@ export default function ModerationPage() {
     return 'warn'
   }
 
+  const allSelected = items.length > 0 && selected.length === items.length
+
+  function toggleSelect(postId: string) {
+    setSelected((prev) => (prev.includes(postId) ? prev.filter((x) => x !== postId) : [...prev, postId]))
+  }
+
   return (
     <div className="page">
       <header className="page-head">
@@ -70,6 +93,17 @@ export default function ModerationPage() {
           <h2>Fila de moderação</h2>
         </div>
         <div className="actions-row">
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={() => setSelected(allSelected ? [] : items.map((m) => m.id))}
+            disabled={items.length === 0}
+          >
+            {allSelected ? 'Desmarcar todos' : 'Selecionar todos'}
+          </button>
+          <button type="button" className="btn danger" onClick={() => deleteSelected()} disabled={selected.length === 0}>
+            Excluir selecionados ({selected.length})
+          </button>
           <button type="button" className="btn secondary" onClick={() => syncNow()}>
             Buscar agora (Instagram)
           </button>
@@ -86,6 +120,14 @@ export default function ModerationPage() {
           {items.map((m) => (
             <article key={m.id} className="card mod-card">
               <div className="thumb">
+                <label className="media-select">
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(m.id)}
+                    onChange={() => toggleSelect(m.id)}
+                    aria-label={`Selecionar post ${m.id}`}
+                  />
+                </label>
                 <img src={(m.mediaUrl ?? m.thumbnailUrl) ?? ''} alt="" loading="lazy" />
                 <span className={`pill ${statusClass(m.status)}`}>{statusLabel(m.status)}</span>
               </div>
@@ -101,6 +143,9 @@ export default function ModerationPage() {
                   <a className="btn ghost sm" href={m.permalink} target="_blank" rel="noreferrer">
                     Instagram
                   </a>
+                  <button className="btn danger sm" type="button" onClick={() => deleteOne(m.id)}>
+                    Excluir
+                  </button>
                 </div>
               </div>
             </article>

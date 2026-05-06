@@ -65,6 +65,55 @@ public sealed class MediaAdminController : ControllerBase
         return NoContent();
     }
 
+    [HttpDelete("media/{postId:guid}")]
+    public async Task<ActionResult> Delete(Guid postId, CancellationToken ct)
+    {
+        var post = await _media.GetByIdAsync(postId, ct);
+        if (post is null)
+            return NotFound();
+
+        var deleted = await _media.DeleteAsync(postId, ct);
+        if (!deleted)
+            return NotFound();
+
+        if (post.Status == MediaPostStatus.Approved)
+            await _notifier.NotifyApprovedMediaChangedAsync(post.Hashtag, ct);
+
+        return NoContent();
+    }
+
+    [HttpPost("media/bulk-delete")]
+    public async Task<ActionResult<object>> BulkDelete([FromBody] BulkDeleteMediaRequest request, CancellationToken ct)
+    {
+        var ids = request.PostIds?
+            .Where(x => x != Guid.Empty)
+            .Distinct()
+            .ToArray() ?? Array.Empty<Guid>();
+
+        if (request.HashtagConfigId == Guid.Empty)
+            return BadRequest(new { error = "hashtag_config_id_required" });
+
+        if (ids.Length == 0)
+            return BadRequest(new { error = "post_ids_required" });
+
+        var found = await _media.ListByIdsAsync(ids, ct);
+        var invalid = found.Any(p => p.HashtagConfigurationId != request.HashtagConfigId);
+        if (invalid)
+            return BadRequest(new { error = "invalid_post_scope" });
+
+        var deleted = await _media.DeleteManyAsync(ids, ct);
+        var approvedTags = found
+            .Where(p => p.Status == MediaPostStatus.Approved)
+            .Select(p => p.Hashtag)
+            .Distinct()
+            .ToArray();
+
+        foreach (var tag in approvedTags)
+            await _notifier.NotifyApprovedMediaChangedAsync(tag, ct);
+
+        return Ok(new { deleted });
+    }
+
     private InstagramMediaPostDto Map(InstagramMediaPost m) =>
         new(
             m.Id,
@@ -94,5 +143,11 @@ public sealed class MediaAdminController : ControllerBase
             return $"{Request.Scheme}://{Request.Host}{uri.AbsolutePath}";
 
         return rawUrl;
+    }
+
+    public sealed class BulkDeleteMediaRequest
+    {
+        public Guid HashtagConfigId { get; set; }
+        public IReadOnlyList<Guid>? PostIds { get; set; }
     }
 }
