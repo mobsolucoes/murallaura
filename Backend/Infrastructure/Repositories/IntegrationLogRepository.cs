@@ -2,6 +2,7 @@ using HashtagWall.Application.Interfaces;
 using HashtagWall.Domain.Entities;
 using HashtagWall.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace HashtagWall.Infrastructure.Repositories;
 
@@ -20,7 +21,19 @@ public class IntegrationLogRepository : IIntegrationLogRepository
         log.Details = TruncateOptional(log.Details, DetailsMaxLength);
 
         _db.IntegrationLogs.Add(log);
-        await _db.SaveChangesAsync(ct);
+        try
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (IsHashtagForeignKeyViolation(ex) && log.HashtagConfigurationId is not null)
+        {
+            // Hashtag may have been deleted concurrently while worker was processing.
+            // Keep the log entry without breaking the polling loop.
+            _db.Entry(log).State = EntityState.Detached;
+            log.HashtagConfigurationId = null;
+            _db.IntegrationLogs.Add(log);
+            await _db.SaveChangesAsync(ct);
+        }
     }
 
     public async Task<IReadOnlyList<IntegrationLog>> ListRecentAsync(Guid? hashtagConfigurationId, int take, CancellationToken ct)
@@ -50,4 +63,10 @@ public class IntegrationLogRepository : IIntegrationLogRepository
             ? value
             : value[..maxLength];
     }
+
+    private static bool IsHashtagForeignKeyViolation(DbUpdateException ex) =>
+        ex.InnerException is PostgresException pg &&
+        pg.SqlState == PostgresErrorCodes.ForeignKeyViolation &&
+        string.Equals(pg.ConstraintName, "FK_IntegrationLogs_HashtagConfigurations_HashtagConfigurationId",
+            StringComparison.Ordinal);
 }
