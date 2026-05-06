@@ -3,6 +3,8 @@ name: murallaura
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: murallaura-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -13,40 +15,50 @@ services:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d hashtagwall"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   api:
-    image: mcr.microsoft.com/dotnet/sdk:8.0
-    working_dir: /app/Backend/Api
-    command: >
-      sh -c "dotnet restore ../HashtagWall.sln &&
-             dotnet run --urls http://0.0.0.0:8500"
+    image: SEU_USUARIO/murallaura-api:latest
+    container_name: murallaura-api
+    restart: unless-stopped
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://0.0.0.0:8500
+      ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=hashtagwall;Username=postgres;Password=postgres
+      Jwt__Issuer: HashtagWall
+      Jwt__Audience: HashtagWall
+      Jwt__Key: CHANGE_ME_TO_A_STRONG_32_PLUS_CHAR_SECRET
+      Jwt__ExpireMinutes: 480
+      SeedAdmin__Username: admin
+      SeedAdmin__Password: ChangeMe123!
+      Cors__Origins__0: http://SEU_HOST_OU_DOMINIO:8501
+      Cors__Origins__1: http://SEU_HOST_OU_DOMINIO:8502
+      MetaOAuth__Enabled: "true"
+      MetaOAuth__GraphApiVersion: v21.0
+      MetaOAuth__RedirectUri: http://SEU_HOST_OU_DOMINIO:8500/api/public/meta/oauth/callback
+      MetaOAuth__FrontendBaseUrl: http://SEU_HOST_OU_DOMINIO:8501
+      MetaOAuth__AppId: CHANGE_ME
+      MetaOAuth__AppSecret: CHANGE_ME
+      MetaOAuth__Scopes: pages_show_list,instagram_basic,business_management
     ports:
       - "8500:8500"
-    volumes:
-      - ./:/app
-      - nuget:/root/.nuget/packages
     depends_on:
       postgres:
         condition: service_healthy
 
   worker:
-    image: mcr.microsoft.com/dotnet/sdk:8.0
-    working_dir: /app/Backend/Worker
-    command: >
-      sh -c "dotnet restore ../HashtagWall.sln &&
-             dotnet run"
+    image: SEU_USUARIO/murallaura-worker:latest
+    container_name: murallaura-worker
+    restart: unless-stopped
     environment:
-      DOTNET_ENVIRONMENT: Development
+      DOTNET_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=hashtagwall;Username=postgres;Password=postgres
-    volumes:
-      - ./:/app
-      - nuget:/root/.nuget/packages
+      Jwt__Issuer: HashtagWall
+      Jwt__Audience: HashtagWall
+      Jwt__Key: CHANGE_ME_TO_A_STRONG_32_PLUS_CHAR_SECRET
+      Jwt__ExpireMinutes: 480
     depends_on:
       postgres:
         condition: service_healthy
@@ -54,38 +66,24 @@ services:
         condition: service_started
 
   admin:
-    image: node:20-alpine
-    working_dir: /app
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
-    environment:
-      VITE_API_URL: http://localhost:8500
-      VITE_WALL_ORIGIN: http://localhost:8502
+    image: SEU_USUARIO/murallaura-admin:latest
+    container_name: murallaura-admin
+    restart: unless-stopped
     ports:
-      - "8501:5173"
-    volumes:
-      - ./Frontend/admin:/app
-      - admin_node_modules:/app/node_modules
+      - "8501:80"
     depends_on:
       api:
         condition: service_started
 
   wall:
-    image: node:20-alpine
-    working_dir: /app
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5174"
-    environment:
-      VITE_API_URL: http://localhost:8500
+    image: SEU_USUARIO/murallaura-wall:latest
+    container_name: murallaura-wall
+    restart: unless-stopped
     ports:
-      - "8502:5174"
-    volumes:
-      - ./Frontend/wall:/app
-      - wall_node_modules:/app/node_modules
+      - "8502:80"
     depends_on:
       api:
         condition: service_started
 
 volumes:
   pgdata:
-  nuget:
-  admin_node_modules:
-  wall_node_modules:
