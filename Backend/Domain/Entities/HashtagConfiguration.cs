@@ -20,6 +20,7 @@ public class HashtagConfiguration
     public int PollIntervalMinutes { get; set; } = 5;
 
     public bool IsMonitoringEnabled { get; set; }
+    public bool AutoApprovePosts { get; set; }
 
     /// <summary>Last successful sync attempt (used by worker scheduling).</summary>
     public DateTimeOffset? LastSyncedAt { get; set; }

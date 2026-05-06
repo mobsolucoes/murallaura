@@ -88,7 +88,7 @@ public sealed class InstagramWebRpaSyncService
                     Permalink = post.Permalink,
                     MediaType = "IMAGE",
                     Timestamp = DateTimeOffset.UtcNow,
-                    Status = MediaPostStatus.Pending,
+                    Status = cfg.AutoApprovePosts ? MediaPostStatus.Approved : MediaPostStatus.Pending,
                     CreatedAt = DateTimeOffset.UtcNow,
                     UpdatedAt = DateTimeOffset.UtcNow
                 };

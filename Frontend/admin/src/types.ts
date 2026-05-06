@@ -4,6 +4,7 @@ export interface HashtagConfiguration {
   instagramBusinessAccountId: string
   metaTokenConfigured: boolean
   pollIntervalMinutes: number
+  autoApprovePosts: boolean
   isMonitoringEnabled: boolean
   createdAt: string
   updatedAt: string

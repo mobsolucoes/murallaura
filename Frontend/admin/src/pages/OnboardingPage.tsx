@@ -22,6 +22,7 @@ export default function OnboardingPage() {
   const [metaAccessToken, setMetaAccessToken] = useState('')
   const [hashtag, setHashtag] = useState('')
   const [pollIntervalMinutes, setPoll] = useState(5)
+  const [autoApprovePosts, setAutoApprovePosts] = useState(false)
   const [isMonitoringEnabled, setMonitor] = useState(true)
 
   const [info, setInfo] = useState<string | null>(null)
@@ -109,6 +110,7 @@ export default function OnboardingPage() {
         instagramBusinessAccountId,
         metaAccessToken: metaAccessToken.trim(),
         pollIntervalMinutes,
+        autoApprovePosts,
         isMonitoringEnabled,
       })
       navigate(`/hashtags/${data.id}/moderate`)
@@ -191,6 +193,10 @@ export default function OnboardingPage() {
             />
           </label>
           <label className="field row">
+            <input type="checkbox" checked={autoApprovePosts} onChange={(e) => setAutoApprovePosts(e.target.checked)} />
+            <span>Aprovar posts automaticamente (sem moderação)</span>
+          </label>
+          <label className="field row">
             <input type="checkbox" checked={isMonitoringEnabled} onChange={(e) => setMonitor(e.target.checked)} />
             <span>Ativar monitoramento imediatamente</span>
           </label>
@@ -220,6 +226,10 @@ export default function OnboardingPage() {
             <div>
               <small>Intervalo</small>
               <strong>{pollIntervalMinutes} min</strong>
+            </div>
+            <div>
+              <small>Aprovação automática</small>
+              <strong>{autoApprovePosts ? 'Sim' : 'Não'}</strong>
             </div>
             <div>
               <small>Monitoramento</small>

@@ -15,6 +15,7 @@ export default function HashtagFormPage() {
   const [instagramBusinessAccountId, setIgbId] = useState('')
   const [metaAccessToken, setMetaAccessToken] = useState('')
   const [pollIntervalMinutes, setPoll] = useState(5)
+  const [autoApprovePosts, setAutoApprovePosts] = useState(false)
   const [isMonitoringEnabled, setMonitor] = useState(true)
   const [loading, setLoading] = useState(isEdit)
   const [saving, setSaving] = useState(false)
@@ -35,6 +36,7 @@ export default function HashtagFormPage() {
         setHashtag(data.hashtag)
         setIgbId(data.instagramBusinessAccountId)
         setPoll(data.pollIntervalMinutes)
+        setAutoApprovePosts(data.autoApprovePosts)
         setMonitor(data.isMonitoringEnabled)
       } finally {
         if (!cancelled) setLoading(false)
@@ -128,6 +130,7 @@ export default function HashtagFormPage() {
         instagramBusinessAccountId,
         metaAccessToken: metaAccessToken.trim() === '' ? null : metaAccessToken,
         pollIntervalMinutes,
+        autoApprovePosts,
         isMonitoringEnabled,
       }
       if (isEdit && id) {
@@ -233,6 +236,14 @@ export default function HashtagFormPage() {
             value={pollIntervalMinutes}
             onChange={(e) => setPoll(Number(e.target.value))}
           />
+        </label>
+        <label className="field row">
+          <input
+            type="checkbox"
+            checked={autoApprovePosts}
+            onChange={(e) => setAutoApprovePosts(e.target.checked)}
+          />
+          <span>Aprovar posts automaticamente (sem moderação)</span>
         </label>
         <label className="field row">
           <input

@@ -63,6 +63,7 @@ public sealed class HashtagAdminController : ControllerBase
             InstagramBusinessAccountId = req.InstagramBusinessAccountId.Trim(),
             MetaAccessToken = req.MetaAccessToken.Trim(),
             PollIntervalMinutes = Math.Clamp(req.PollIntervalMinutes, 1, 24 * 60),
+            AutoApprovePosts = req.AutoApprovePosts,
             IsMonitoringEnabled = req.IsMonitoringEnabled,
             CreatedAt = now,
             UpdatedAt = now
@@ -104,6 +105,7 @@ public sealed class HashtagAdminController : ControllerBase
             cfg.MetaAccessToken = req.MetaAccessToken!.Trim();
 
         cfg.PollIntervalMinutes = Math.Clamp(req.PollIntervalMinutes, 1, 24 * 60);
+        cfg.AutoApprovePosts = req.AutoApprovePosts;
         cfg.IsMonitoringEnabled = req.IsMonitoringEnabled;
         cfg.UpdatedAt = DateTimeOffset.UtcNow;
 
@@ -139,6 +141,7 @@ public sealed class HashtagAdminController : ControllerBase
             h.InstagramBusinessAccountId,
             !string.IsNullOrWhiteSpace(h.MetaAccessToken),
             h.PollIntervalMinutes,
+            h.AutoApprovePosts,
             h.IsMonitoringEnabled,
             h.CreatedAt,
             h.UpdatedAt);

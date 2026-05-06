@@ -105,15 +105,16 @@ public sealed class PublicWallController : ControllerBase
             Permalink = publicUrl,
             MediaType = isVideo ? "VIDEO" : "IMAGE",
             Timestamp = now,
-            Status = MediaPostStatus.Approved,
+            Status = cfg.AutoApprovePosts ? MediaPostStatus.Approved : MediaPostStatus.Pending,
             CreatedAt = now,
             UpdatedAt = now
         };
 
         await _media.AddAsync(entity, ct);
-        await _notifier.NotifyApprovedMediaChangedAsync(normalized, ct);
+        if (entity.Status == MediaPostStatus.Approved)
+            await _notifier.NotifyApprovedMediaChangedAsync(normalized, ct);
 
-        return Ok(new { ok = true, mediaUrl = publicUrl });
+        return Ok(new { ok = true, mediaUrl = publicUrl, status = entity.Status.ToString() });
     }
 
     private static WallConfigurationDto MapWall(WallConfiguration w) =>

@@ -6,6 +6,7 @@ public record HashtagConfigurationDto(
     string InstagramBusinessAccountId,
     bool MetaTokenConfigured,
     int PollIntervalMinutes,
+    bool AutoApprovePosts,
     bool IsMonitoringEnabled,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
@@ -15,4 +16,5 @@ public record UpsertHashtagConfigurationRequest(
     string InstagramBusinessAccountId,
     string? MetaAccessToken,
     int PollIntervalMinutes,
+    bool AutoApprovePosts,
     bool IsMonitoringEnabled);

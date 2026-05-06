@@ -23,10 +23,6 @@ export default function WallScreen() {
 
   const [cfg, setCfg] = useState<WallConfiguration | null>(null)
   const [posts, setPosts] = useState<InstagramMediaPost[]>([])
-  const [index, setIndex] = useState(0)
-  const [visible, setVisible] = useState(true)
-
-  const durationMs = Math.max(5, cfg?.displayDurationSeconds ?? 30) * 1000
 
   const qrValue = useMemo(
     () => `${window.location.origin}/wall/${encodeURIComponent(hashtag)}/post`,
@@ -41,7 +37,6 @@ export default function WallScreen() {
     ])
     setCfg(c.data)
     setPosts(p.data)
-    setIndex(0)
   }, [hashtag])
 
   useEffect(() => {
@@ -50,13 +45,6 @@ export default function WallScreen() {
       setPosts([])
     })
   }, [loadAll])
-
-  useEffect(() => {
-    setIndex((i) => {
-      if (posts.length === 0) return 0
-      return Math.min(i, posts.length - 1)
-    })
-  }, [posts])
 
   useEffect(() => {
     const connection = new HubConnectionBuilder()
@@ -86,24 +74,6 @@ export default function WallScreen() {
     }, 60000)
     return () => window.clearInterval(id)
   }, [loadAll])
-
-  useEffect(() => {
-    if (!cfg || posts.length === 0) return
-
-    const iv = window.setInterval(() => {
-      setVisible(false)
-      window.setTimeout(() => {
-        setIndex((i) => (posts.length === 0 ? 0 : (i + 1) % posts.length))
-        setVisible(true)
-      }, 700)
-    }, durationMs)
-
-    return () => window.clearInterval(iv)
-  }, [cfg, posts.length, durationMs])
-
-  const current = posts[index]
-  const imgUrl = current ? current.mediaUrl ?? current.thumbnailUrl ?? '' : ''
-  const isVideo = current?.mediaType.toLowerCase().includes('video') ?? false
 
   const themeVars = cfg
     ? ({
@@ -143,34 +113,56 @@ export default function WallScreen() {
             <p className="waiting-sub">As fotos aparecem aqui após moderação.</p>
           </div>
         ) : (
-          <div className="stage">
-            <div className={`frame ${visible ? 'on' : 'off'}`}>
-              {imgUrl ? (
-                isVideo ? (
-                  <video key={current?.id} src={imgUrl} className="photo" autoPlay muted loop playsInline controls />
-                ) : (
-                  <img src={imgUrl} alt="" className="photo" />
-                )
-              ) : (
-                <div className="empty-img">Sem preview</div>
-              )}
-              <div className="shine" />
-            </div>
-            <footer className="caption-bar">
-              {cfg?.showCaption !== false && current?.caption ? (
-                <p className="caption">{truncate(current.caption, 220)}</p>
-              ) : (
-                <p className="caption muted"> </p>
-              )}
-              <div className="qr-row">
-                {cfg?.showQrCode !== false ? (
-                  <div className="qr-box">
-                    <QRCodeSVG value={qrValue} size={140} bgColor="transparent" fgColor="#ffffff" />
-                    <span>Poste sua foto/video direto na plataforma</span>
-                  </div>
-                ) : null}
+          <div className="feed-wrap">
+            {cfg?.showQrCode !== false ? (
+              <div className="feed-cta">
+                <div className="qr-box">
+                  <QRCodeSVG value={qrValue} size={108} bgColor="transparent" fgColor="#111111" />
+                  <span>Poste sua foto/video direto na plataforma</span>
+                </div>
               </div>
-            </footer>
+            ) : null}
+
+            <div className="feed-list">
+              {posts.map((post) => {
+                const imgUrl = post.mediaUrl ?? post.thumbnailUrl ?? ''
+                const isVideo = post.mediaType.toLowerCase().includes('video')
+
+                return (
+                  <article key={post.id} className="ig-card">
+                    <header className="ig-card-head">
+                      <div className="ig-avatar">#</div>
+                      <div className="ig-author">
+                        <strong>{cfg?.title ?? `#${hashtag}`}</strong>
+                        <span>#{hashtag}</span>
+                      </div>
+                    </header>
+
+                    {imgUrl ? (
+                      isVideo ? (
+                        <video src={imgUrl} className="ig-media" autoPlay muted loop playsInline controls />
+                      ) : (
+                        <img src={imgUrl} alt="" className="ig-media" loading="lazy" />
+                      )
+                    ) : (
+                      <div className="empty-img">Sem preview</div>
+                    )}
+
+                    <div className="ig-actions" aria-hidden>
+                      <span>♡</span>
+                      <span>💬</span>
+                      <span>➤</span>
+                    </div>
+
+                    {cfg?.showCaption !== false && post.caption ? (
+                      <p className="ig-caption">
+                        <strong>{cfg?.title ?? `#${hashtag}`}</strong> {truncate(post.caption, 240)}
+                      </p>
+                    ) : null}
+                  </article>
+                )
+              })}
+            </div>
           </div>
         )}
       </main>

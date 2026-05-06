@@ -79,7 +79,7 @@ public class InstagramSyncService : IInstagramSyncService
                     Permalink = snap.Permalink,
                     MediaType = snap.MediaType,
                     Timestamp = snap.Timestamp,
-                    Status = MediaPostStatus.Pending,
+                    Status = cfg.AutoApprovePosts ? MediaPostStatus.Approved : MediaPostStatus.Pending,
                     CreatedAt = DateTimeOffset.UtcNow,
                     UpdatedAt = DateTimeOffset.UtcNow
                 };
