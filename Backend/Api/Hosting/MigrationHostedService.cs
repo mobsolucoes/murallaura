@@ -19,6 +19,12 @@ public sealed class MigrationHostedService : IHostedService
         await using var scope = _scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.MigrateAsync(cancellationToken);
+        await db.Database.ExecuteSqlRawAsync(
+            """
+            ALTER TABLE "HashtagConfigurations"
+            ADD COLUMN IF NOT EXISTS "AutoApprovePosts" boolean NOT NULL DEFAULT FALSE;
+            """,
+            cancellationToken);
         _logger.LogInformation("Database migrations applied.");
     }
 
