@@ -42,8 +42,8 @@ services:
       MetaOAuth__GraphApiVersion: v21.0
       MetaOAuth__RedirectUri: http://84.247.141.109:8500/api/public/meta/oauth/callback
       MetaOAuth__FrontendBaseUrl: http://84.247.141.109:8501
-      MetaOAuth__AppId: CHANGE_ME
-      MetaOAuth__AppSecret: CHANGE_ME
+      MetaOAuth__AppId: 1475668974052298
+      MetaOAuth__AppSecret: b829c7e673dc6bc4917d1dae70c216f3
       MetaOAuth__Scopes: pages_show_list,instagram_basic,business_management
     ports:
       - "8500:8500"
