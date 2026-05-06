@@ -68,7 +68,7 @@ services:
       InstagramWebRpa__Enabled: "true"
       InstagramWebRpa__Headless: "false"
       InstagramWebRpa__Username: smartdex.minimercados
-      InstagramWebRpa__Password: @Smartdex2025
+      InstagramWebRpa__Password: "@Smartdex2025"
       InstagramWebRpa__MaxPostsPerRun: 20
       InstagramWebRpa__NavigationTimeoutMs: 45000
     depends_on:
