@@ -36,12 +36,12 @@ services:
       Jwt__ExpireMinutes: 480
       SeedAdmin__Username: admin
       SeedAdmin__Password: ChangeMe123!
-      Cors__Origins__0: http://SEU_HOST_OU_DOMINIO:8501
-      Cors__Origins__1: http://SEU_HOST_OU_DOMINIO:8502
+      Cors__Origins__0: http://84.247.141.109:8501
+      Cors__Origins__1: http://84.247.141.109:8502
       MetaOAuth__Enabled: "true"
       MetaOAuth__GraphApiVersion: v21.0
-      MetaOAuth__RedirectUri: http://SEU_HOST_OU_DOMINIO:8500/api/public/meta/oauth/callback
-      MetaOAuth__FrontendBaseUrl: http://SEU_HOST_OU_DOMINIO:8501
+      MetaOAuth__RedirectUri: http://84.247.141.109:8500/api/public/meta/oauth/callback
+      MetaOAuth__FrontendBaseUrl: http://84.247.141.109:8501
       MetaOAuth__AppId: CHANGE_ME
       MetaOAuth__AppSecret: CHANGE_ME
       MetaOAuth__Scopes: pages_show_list,instagram_basic,business_management
