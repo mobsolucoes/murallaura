@@ -47,6 +47,8 @@ services:
       MetaOAuth__Scopes: ""
     ports:
       - "8500:8500"
+    volumes:
+      - apiuploads:/app/wwwroot/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -118,3 +120,4 @@ services:
 volumes:
   pgdata:
   workerdata:
+  apiuploads:
