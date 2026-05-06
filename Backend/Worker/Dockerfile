@@ -12,7 +12,7 @@ COPY Backend/ Backend/
 
 RUN dotnet publish "Backend/Worker/HashtagWall.Worker.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/runtime:8.0 AS runtime
+FROM mcr.microsoft.com/playwright/dotnet:v1.55.0-noble AS runtime
 WORKDIR /app
 
 COPY --from=build /app/publish .

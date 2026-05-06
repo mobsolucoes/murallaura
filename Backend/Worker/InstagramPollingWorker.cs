@@ -1,4 +1,5 @@
 using HashtagWall.Application.Interfaces;
+using Microsoft.Extensions.Options;
 
 namespace HashtagWall.Worker;
 
@@ -7,11 +8,16 @@ public sealed class InstagramPollingWorker : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<InstagramPollingWorker> _logger;
+    private readonly IOptionsMonitor<InstagramWebRpaOptions> _rpaOptions;
 
-    public InstagramPollingWorker(IServiceScopeFactory scopeFactory, ILogger<InstagramPollingWorker> logger)
+    public InstagramPollingWorker(
+        IServiceScopeFactory scopeFactory,
+        ILogger<InstagramPollingWorker> logger,
+        IOptionsMonitor<InstagramWebRpaOptions> rpaOptions)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
+        _rpaOptions = rpaOptions;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -26,16 +32,20 @@ public sealed class InstagramPollingWorker : BackgroundService
                 await using var scope = _scopeFactory.CreateAsyncScope();
                 var hashtags = scope.ServiceProvider.GetRequiredService<IHashtagConfigurationRepository>();
                 var sync = scope.ServiceProvider.GetRequiredService<IInstagramSyncService>();
+                var rpaSync = scope.ServiceProvider.GetRequiredService<InstagramWebRpaSyncService>();
 
                 var list = await hashtags.GetAllAsync(stoppingToken);
                 var now = DateTimeOffset.UtcNow;
+                var useRpa = _rpaOptions.CurrentValue.Enabled;
 
                 foreach (var h in list.Where(x => x.IsMonitoringEnabled))
                 {
                     var interval = TimeSpan.FromMinutes(Math.Clamp(h.PollIntervalMinutes, 1, 24 * 60));
                     if (h.LastSyncedAt is null || now - h.LastSyncedAt >= interval)
                     {
-                        var inserted = await sync.SyncHashtagAsync(h.Id, stoppingToken);
+                        var inserted = useRpa
+                            ? await rpaSync.SyncHashtagAsync(h.Id, stoppingToken)
+                            : await sync.SyncHashtagAsync(h.Id, stoppingToken);
                         if (inserted > 0)
                             _logger.LogInformation("Synced #{Tag}: +{Inserted} post(s).", h.NormalizedHashtag, inserted);
                     }

@@ -65,6 +65,12 @@ services:
       Jwt__Audience: HashtagWall
       Jwt__Key: CHANGE_ME_TO_A_STRONG_32_PLUS_CHAR_SECRET
       Jwt__ExpireMinutes: 480
+      InstagramWebRpa__Enabled: "false"
+      InstagramWebRpa__Headless: "true"
+      InstagramWebRpa__Username: CHANGE_ME_INSTAGRAM_USERNAME
+      InstagramWebRpa__Password: CHANGE_ME_INSTAGRAM_PASSWORD
+      InstagramWebRpa__MaxPostsPerRun: 20
+      InstagramWebRpa__NavigationTimeoutMs: 45000
     depends_on:
       postgres:
         condition: service_healthy
