@@ -44,7 +44,7 @@ services:
       MetaOAuth__FrontendBaseUrl: https://murallaura.bloky.com.br
       MetaOAuth__AppId: 1475668974052298
       MetaOAuth__AppSecret: b829c7e673dc6bc4917d1dae70c216f3
-      MetaOAuth__Scopes: pages_show_list,instagram_basic,business_management
+      MetaOAuth__Scopes: public_profile
     ports:
       - "8500:8500"
     depends_on:
