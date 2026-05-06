@@ -71,6 +71,13 @@ services:
       InstagramWebRpa__Password: "@Smartdex2025"
       InstagramWebRpa__MaxPostsPerRun: 20
       InstagramWebRpa__NavigationTimeoutMs: 45000
+      InstagramWebRpa__MaxRetryAttempts: 3
+      InstagramWebRpa__InitialBackoffSeconds: 5
+      InstagramWebRpa__PauseAfterLoginMs: 2500
+      InstagramWebRpa__SessionStatePath: /data/instagram-rpa-state.json
+      InstagramWebRpa__FailOnCheckpointOrTwoFactor: "true"
+    volumes:
+      - workerdata:/data
     depends_on:
       postgres:
         condition: service_healthy
@@ -110,3 +117,4 @@ services:
 
 volumes:
   pgdata:
+  workerdata:

@@ -23,6 +23,7 @@ public sealed class InstagramPollingWorker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        _logger.LogInformation("Instagram polling worker started. Tick interval: 30s.");
 
         while (!stoppingToken.IsCancellationRequested &&
                await timer.WaitForNextTickAsync(stoppingToken))
@@ -37,22 +38,39 @@ public sealed class InstagramPollingWorker : BackgroundService
                 var list = await hashtags.GetAllAsync(stoppingToken);
                 var now = DateTimeOffset.UtcNow;
                 var useRpa = _rpaOptions.CurrentValue.Enabled;
+                _logger.LogInformation(
+                    "Polling tick at {Now}. Mode: {Mode}. Total hashtags: {Count}.",
+                    now,
+                    useRpa ? "InstagramWebRpa" : "GraphApi",
+                    list.Count);
 
                 foreach (var h in list.Where(x => x.IsMonitoringEnabled))
                 {
                     var interval = TimeSpan.FromMinutes(Math.Clamp(h.PollIntervalMinutes, 1, 24 * 60));
                     if (h.LastSyncedAt is null || now - h.LastSyncedAt >= interval)
                     {
+                        _logger.LogInformation(
+                            "Starting sync for #{Tag}. LastSyncedAt: {LastSyncedAt}. IntervalMinutes: {Interval}.",
+                            h.NormalizedHashtag,
+                            h.LastSyncedAt,
+                            interval.TotalMinutes);
                         var inserted = useRpa
                             ? await rpaSync.SyncHashtagAsync(h.Id, stoppingToken)
                             : await sync.SyncHashtagAsync(h.Id, stoppingToken);
-                        if (inserted > 0)
-                            _logger.LogInformation("Synced #{Tag}: +{Inserted} post(s).", h.NormalizedHashtag, inserted);
+                        _logger.LogInformation("Finished sync for #{Tag}: +{Inserted} new post(s).", h.NormalizedHashtag, inserted);
+                    }
+                    else
+                    {
+                        _logger.LogDebug(
+                            "Skipping #{Tag}. Next run in ~{RemainingSeconds}s.",
+                            h.NormalizedHashtag,
+                            Math.Max(0, (interval - (now - h.LastSyncedAt.Value)).TotalSeconds));
                     }
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
+                _logger.LogInformation("Instagram polling worker cancellation requested.");
                 break;
             }
             catch (Exception ex)
@@ -60,5 +78,7 @@ public sealed class InstagramPollingWorker : BackgroundService
                 _logger.LogError(ex, "Polling iteration failed.");
             }
         }
+
+        _logger.LogInformation("Instagram polling worker stopped.");
     }
 }

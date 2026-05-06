@@ -10,6 +10,13 @@ namespace HashtagWall.Worker;
 public sealed class InstagramWebRpaSyncService
 {
     private static readonly Regex PostCodeRegex = new("/(?:p|reel)/([^/?#]+)/?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly string[] CheckpointSignals =
+    [
+        "/challenge/",
+        "/accounts/suspended/",
+        "two_factor",
+        "checkpoint"
+    ];
 
     private readonly IHashtagConfigurationRepository _hashtagRepo;
     private readonly IInstagramMediaRepository _mediaRepo;
@@ -39,11 +46,29 @@ public sealed class InstagramWebRpaSyncService
 
         var opt = _options.CurrentValue;
         if (!opt.Enabled || string.IsNullOrWhiteSpace(opt.Username) || string.IsNullOrWhiteSpace(opt.Password))
+        {
+            _logger.LogDebug(
+                "Instagram Web RPA skipped for #{Tag}. Enabled={Enabled}, UsernameConfigured={HasUsername}, PasswordConfigured={HasPassword}.",
+                cfg.NormalizedHashtag,
+                opt.Enabled,
+                !string.IsNullOrWhiteSpace(opt.Username),
+                !string.IsNullOrWhiteSpace(opt.Password));
             return 0;
+        }
 
         try
         {
-            var posts = await ScrapeHashtagPostsAsync(cfg.NormalizedHashtag, opt, ct);
+            _logger.LogInformation(
+                "Instagram Web RPA sync started for #{Tag}. MaxPosts={MaxPosts}, RetryAttempts={RetryAttempts}, Headless={Headless}.",
+                cfg.NormalizedHashtag,
+                opt.MaxPostsPerRun,
+                opt.MaxRetryAttempts,
+                opt.Headless);
+            var posts = await ExecuteWithRetryAsync(
+                cfg.NormalizedHashtag,
+                opt,
+                ct);
+            _logger.LogInformation("Scraping finished for #{Tag}. Candidate posts found: {Count}.", cfg.NormalizedHashtag, posts.Count);
             var inserted = 0;
 
             foreach (var post in posts)
@@ -85,6 +110,7 @@ public sealed class InstagramWebRpaSyncService
                 CreatedAt = DateTimeOffset.UtcNow
             }, ct);
 
+            _logger.LogInformation("Instagram Web RPA sync finished for #{Tag}. Inserted={Inserted}.", cfg.NormalizedHashtag, inserted);
             return inserted;
         }
         catch (Exception ex)
@@ -107,6 +133,41 @@ public sealed class InstagramWebRpaSyncService
         }
     }
 
+    private async Task<IReadOnlyList<ScrapedPost>> ExecuteWithRetryAsync(
+        string hashtag,
+        InstagramWebRpaOptions opt,
+        CancellationToken ct)
+    {
+        Exception? lastError = null;
+        var attempts = Math.Max(opt.MaxRetryAttempts, 1);
+
+        for (var attempt = 1; attempt <= attempts; attempt++)
+        {
+            ct.ThrowIfCancellationRequested();
+            try
+            {
+                _logger.LogInformation("RPA attempt {Attempt}/{Total} for #{Tag}.", attempt, attempts, hashtag);
+                return await ScrapeHashtagPostsAsync(hashtag, opt, ct);
+            }
+            catch (Exception ex) when (attempt < attempts)
+            {
+                lastError = ex;
+                var backoff = TimeSpan.FromSeconds(Math.Max(opt.InitialBackoffSeconds, 1) * attempt);
+                _logger.LogWarning(ex,
+                    "Instagram RPA attempt {Attempt}/{Total} failed for #{Tag}. Retrying in {Delay}s.",
+                    attempt, attempts, hashtag, backoff.TotalSeconds);
+                await Task.Delay(backoff, ct);
+            }
+            catch (Exception ex)
+            {
+                lastError = ex;
+                break;
+            }
+        }
+
+        throw new InvalidOperationException($"Instagram RPA failed after {attempts} attempt(s).", lastError);
+    }
+
     private async Task<IReadOnlyList<ScrapedPost>> ScrapeHashtagPostsAsync(string hashtag, InstagramWebRpaOptions opt, CancellationToken ct)
     {
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -118,33 +179,37 @@ public sealed class InstagramWebRpaSyncService
             Headless = opt.Headless
         });
 
-        var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        var contextOptions = new BrowserNewContextOptions
         {
             ViewportSize = new ViewportSize { Width = 1366, Height = 768 }
-        });
+        };
+        if (!string.IsNullOrWhiteSpace(opt.SessionStatePath) && File.Exists(opt.SessionStatePath))
+            contextOptions.StorageStatePath = opt.SessionStatePath;
+
+        var context = await browser.NewContextAsync(contextOptions);
+        _logger.LogDebug("Browser context created for #{Tag}. SessionStatePath={SessionStatePath}.", hashtag, opt.SessionStatePath);
 
         var page = await context.NewPageAsync();
         page.SetDefaultTimeout(opt.NavigationTimeoutMs);
 
-        await page.GotoAsync("https://www.instagram.com/accounts/login/");
-        await page.Locator("input[name='username']").FillAsync(opt.Username);
-        await page.Locator("input[name='password']").FillAsync(opt.Password);
-        await page.Locator("button[type='submit']").ClickAsync();
-
-        await page.WaitForURLAsync("**/instagram.com/**", new PageWaitForURLOptions
+        var isAuthenticated = await EnsureAuthenticatedAsync(page, context, opt, timeoutCts.Token);
+        if (!isAuthenticated)
         {
-            Timeout = opt.NavigationTimeoutMs
-        });
+            throw new InvalidOperationException("Instagram login did not complete. Validate credentials or checkpoint challenge.");
+        }
 
         var hashtagUrl = $"https://www.instagram.com/explore/tags/{hashtag.Trim().TrimStart('#')}/";
-        await page.GotoAsync(hashtagUrl);
+        await page.GotoAsync(hashtagUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        EnsureNoCheckpointOrTwoFactor(page.Url, opt);
         await page.WaitForSelectorAsync("a[href*='/p/'],a[href*='/reel/']");
+        _logger.LogInformation("Hashtag page loaded for #{Tag}.", hashtag);
 
         var links = await page.EvaluateAsync<string[]>(
             "Array.from(document.querySelectorAll(\"a[href*='/p/'],a[href*='/reel/']\")).map(a => a.href)");
 
         var uniqueLinks = links.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().Take(Math.Max(opt.MaxPostsPerRun, 1)).ToList();
         var posts = new List<ScrapedPost>(uniqueLinks.Count);
+        _logger.LogInformation("Collected {Count} unique post links for #{Tag}.", uniqueLinks.Count, hashtag);
 
         foreach (var link in uniqueLinks)
         {
@@ -161,6 +226,62 @@ public sealed class InstagramWebRpaSyncService
 
         await context.CloseAsync();
         return posts;
+    }
+
+    private async Task<bool> EnsureAuthenticatedAsync(
+        IPage page,
+        IBrowserContext context,
+        InstagramWebRpaOptions opt,
+        CancellationToken ct)
+    {
+        await page.GotoAsync("https://www.instagram.com/", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        EnsureNoCheckpointOrTwoFactor(page.Url, opt);
+        if (!NeedsLogin(page.Url))
+        {
+            _logger.LogInformation("Instagram session already authenticated.");
+            return true;
+        }
+
+        _logger.LogInformation("Instagram login required. Executing credential login.");
+        await page.GotoAsync("https://www.instagram.com/accounts/login/", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        EnsureNoCheckpointOrTwoFactor(page.Url, opt);
+        await page.Locator("input[name='username']").FillAsync(opt.Username);
+        await page.Locator("input[name='password']").FillAsync(opt.Password);
+        await page.Locator("button[type='submit']").ClickAsync();
+        await page.WaitForTimeoutAsync(Math.Max(opt.PauseAfterLoginMs, 0));
+
+        await page.GotoAsync("https://www.instagram.com/", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        EnsureNoCheckpointOrTwoFactor(page.Url, opt);
+
+        var loggedIn = !NeedsLogin(page.Url);
+        if (loggedIn && !string.IsNullOrWhiteSpace(opt.SessionStatePath))
+        {
+            var directory = Path.GetDirectoryName(opt.SessionStatePath);
+            if (!string.IsNullOrWhiteSpace(directory))
+                Directory.CreateDirectory(directory);
+
+            await context.StorageStateAsync(new BrowserContextStorageStateOptions
+            {
+                Path = opt.SessionStatePath
+            });
+            _logger.LogInformation("Instagram session state saved to {Path}.", opt.SessionStatePath);
+        }
+
+        _logger.LogInformation("Instagram login result: {LoggedIn}.", loggedIn);
+        return loggedIn;
+    }
+
+    private static bool NeedsLogin(string currentUrl) =>
+        currentUrl.Contains("/accounts/login", StringComparison.OrdinalIgnoreCase);
+
+    private static void EnsureNoCheckpointOrTwoFactor(string currentUrl, InstagramWebRpaOptions opt)
+    {
+        if (!opt.FailOnCheckpointOrTwoFactor)
+            return;
+
+        var lower = currentUrl.ToLowerInvariant();
+        if (CheckpointSignals.Any(signal => lower.Contains(signal)))
+            throw new InvalidOperationException("Instagram blocked automation with checkpoint/two-factor flow. Manual login approval is required.");
     }
 
     private static string? ExtractMediaId(string permalink)
