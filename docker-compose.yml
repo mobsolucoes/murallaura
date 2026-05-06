@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: hashtagwall
     ports:
-      - "5432:5432"
+      - "8503:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -20,12 +20,12 @@ services:
     working_dir: /app/Backend/Api
     command: >
       sh -c "dotnet restore ../HashtagWall.sln &&
-             dotnet run --urls http://0.0.0.0:5233"
+             dotnet run --urls http://0.0.0.0:8500"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=hashtagwall;Username=postgres;Password=postgres
     ports:
-      - "5233:5233"
+      - "8500:8500"
     volumes:
       - ./:/app
       - nuget:/root/.nuget/packages
@@ -56,10 +56,10 @@ services:
     working_dir: /app/Frontend/admin
     command: sh -c "npm ci && npm run dev -- --host 0.0.0.0 --port 5173"
     environment:
-      VITE_API_URL: http://localhost:5233
-      VITE_WALL_ORIGIN: http://localhost:5174
+      VITE_API_URL: http://localhost:8500
+      VITE_WALL_ORIGIN: http://localhost:8502
     ports:
-      - "5173:5173"
+      - "8501:5173"
     volumes:
       - ./:/app
       - admin_node_modules:/app/Frontend/admin/node_modules
@@ -72,9 +72,9 @@ services:
     working_dir: /app/Frontend/wall
     command: sh -c "npm ci && npm run dev -- --host 0.0.0.0 --port 5174"
     environment:
-      VITE_API_URL: http://localhost:5233
+      VITE_API_URL: http://localhost:8500
     ports:
-      - "5174:5174"
+      - "8502:5174"
     volumes:
       - ./:/app
       - wall_node_modules:/app/Frontend/wall/node_modules
