@@ -2,7 +2,7 @@ import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import { QRCodeSVG } from 'qrcode.react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { api, apiBaseUrl } from './api'
 import type { InstagramMediaPost, WallConfiguration } from './types'
 
@@ -29,7 +29,7 @@ export default function WallScreen() {
   const durationMs = Math.max(5, cfg?.displayDurationSeconds ?? 30) * 1000
 
   const qrValue = useMemo(
-    () => `https://www.instagram.com/explore/tags/${encodeURIComponent(hashtag)}/`,
+    () => `${window.location.origin}/wall/${encodeURIComponent(hashtag)}/post`,
     [hashtag]
   )
 
@@ -103,6 +103,7 @@ export default function WallScreen() {
 
   const current = posts[index]
   const imgUrl = current ? current.mediaUrl ?? current.thumbnailUrl ?? '' : ''
+  const isVideo = current?.mediaType.toLowerCase().includes('video') ?? false
 
   const themeVars = cfg
     ? ({
@@ -115,11 +116,21 @@ export default function WallScreen() {
   return (
     <div className="wall-root" style={themeVars}>
       <header className="wall-header">
-        <div className="brand-line">
-          {cfg?.logoUrl ? <img className="wall-logo" src={cfg.logoUrl} alt="" /> : null}
-          <div>
-            <h1>{cfg?.title ?? `#${hashtag}`}</h1>
-            <p className="hash-line">#{hashtag}</p>
+        <div className="ig-top">
+          <div className="brand-line">
+            {cfg?.logoUrl ? <img className="wall-logo" src={cfg.logoUrl} alt="" /> : null}
+            <div>
+              <h1>{cfg?.title ?? `#${hashtag}`}</h1>
+              <p className="hash-line">#{hashtag}</p>
+            </div>
+          </div>
+          <div className="top-actions">
+            <a className="post-link" href={`https://www.instagram.com/explore/tags/${encodeURIComponent(hashtag)}/`} target="_blank" rel="noreferrer">
+              Ver no Instagram
+            </a>
+            <Link className="post-link primary" to={`/wall/${encodeURIComponent(hashtag)}/post`}>
+              Postar no mural
+            </Link>
           </div>
         </div>
       </header>
@@ -135,7 +146,11 @@ export default function WallScreen() {
           <div className="stage">
             <div className={`frame ${visible ? 'on' : 'off'}`}>
               {imgUrl ? (
-                <img src={imgUrl} alt="" className="photo" />
+                isVideo ? (
+                  <video key={current?.id} src={imgUrl} className="photo" autoPlay muted loop playsInline controls />
+                ) : (
+                  <img src={imgUrl} alt="" className="photo" />
+                )
               ) : (
                 <div className="empty-img">Sem preview</div>
               )}
@@ -151,7 +166,7 @@ export default function WallScreen() {
                 {cfg?.showQrCode !== false ? (
                   <div className="qr-box">
                     <QRCodeSVG value={qrValue} size={140} bgColor="transparent" fgColor="#ffffff" />
-                    <span>Poste sua foto com #{hashtag}</span>
+                    <span>Poste sua foto/video direto na plataforma</span>
                   </div>
                 ) : null}
               </div>

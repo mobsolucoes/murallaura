@@ -23,7 +23,17 @@ body {
 }
 
 .wall-header {
-  padding: 1.25rem 2rem;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(8px);
+}
+
+.ig-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
 }
 
 .brand-line {
@@ -51,6 +61,26 @@ body {
   font-size: 1.05rem;
 }
 
+.top-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.post-link {
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  text-decoration: none;
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-weight: 600;
+}
+
+.post-link.primary {
+  background: #0095f6;
+  border-color: #0095f6;
+  color: white;
+}
+
 .wall-main {
   flex: 1;
   display: grid;
@@ -59,20 +89,21 @@ body {
 }
 
 .stage {
-  width: min(1200px, 94vw);
+  width: min(920px, 94vw);
   display: grid;
   gap: 1rem;
 }
 
 .frame {
   position: relative;
-  border-radius: 28px;
+  border-radius: 16px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow:
-    0 24px 80px rgba(0, 0, 0, 0.55),
+    0 18px 56px rgba(0, 0, 0, 0.55),
     0 0 0 1px rgba(255, 255, 255, 0.04);
   transition: opacity 700ms ease, transform 700ms ease;
+  background: #0f172a;
 }
 
 .frame.off {
@@ -87,8 +118,8 @@ body {
 
 .photo {
   width: 100%;
-  max-height: min(72vh, 820px);
-  object-fit: contain;
+  max-height: min(70vh, 780px);
+  object-fit: cover;
   display: block;
   background: #0b0b12;
 }
@@ -117,6 +148,10 @@ body {
 .caption-bar {
   display: grid;
   gap: 0.75rem;
+  padding: 0.75rem 0.85rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.8);
 }
 
 .caption {
@@ -158,6 +193,73 @@ body {
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(12, 12, 22, 0.65);
+}
+
+.upload-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+  background: radial-gradient(circle at 20% 10%, rgba(0, 149, 246, 0.2), transparent 40%), #0b1020;
+}
+
+.upload-card {
+  width: min(680px, 96vw);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  padding: 1.25rem;
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.upload-breadcrumb a {
+  color: #93c5fd;
+}
+
+.upload-muted {
+  color: #cbd5e1;
+}
+
+.upload-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.upload-form label {
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.95rem;
+}
+
+.upload-form input,
+.upload-form textarea {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+}
+
+.upload-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  background: #0095f6;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.upload-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.upload-ok {
+  color: #86efac;
+}
+
+.upload-error {
+  color: #fca5a5;
 }
 
 .waiting-title {

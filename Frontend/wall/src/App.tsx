@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import PostUploadPage from './PostUploadPage'
 import WallScreen from './WallScreen'
 
 function Home() {
@@ -18,6 +19,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/wall/:hashtag" element={<WallScreen />} />
+        <Route path="/wall/:hashtag/post" element={<PostUploadPage />} />
         <Route path="/" element={<Home />} />
       </Routes>
     </BrowserRouter>
