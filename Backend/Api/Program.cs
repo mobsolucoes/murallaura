@@ -52,6 +52,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddSingleton<MetaOAuthFlow>();
 
 builder.Services.AddScoped<IWallRealtimeNotifier, WallRealtimeNotifier>();
+builder.Services.AddScoped<MediaZipExportService>();
 
 builder.Services.AddSignalR();
 

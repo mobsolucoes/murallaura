@@ -1,3 +1,4 @@
+using HashtagWall.Api.Services;
 using HashtagWall.Application.DTOs;
 using HashtagWall.Application.Interfaces;
 using HashtagWall.Domain.Entities;
@@ -15,15 +16,18 @@ public sealed class MediaAdminController : ControllerBase
     private readonly IInstagramMediaRepository _media;
     private readonly IHashtagConfigurationRepository _hashtags;
     private readonly IWallRealtimeNotifier _notifier;
+    private readonly MediaZipExportService _zipExport;
 
     public MediaAdminController(
         IInstagramMediaRepository media,
         IHashtagConfigurationRepository hashtags,
-        IWallRealtimeNotifier notifier)
+        IWallRealtimeNotifier notifier,
+        MediaZipExportService zipExport)
     {
         _media = media;
         _hashtags = hashtags;
         _notifier = notifier;
+        _zipExport = zipExport;
     }
 
     [HttpGet("hashtags/{hashtagConfigId:guid}/media")]
@@ -35,6 +39,22 @@ public sealed class MediaAdminController : ControllerBase
 
         var items = await _media.ListByHashtagAsync(hashtagConfigId, ct);
         return Ok(items.Select(Map).ToList());
+    }
+
+    [HttpGet("hashtags/{hashtagConfigId:guid}/media/download")]
+    public async Task<IActionResult> DownloadAll(Guid hashtagConfigId, CancellationToken ct)
+    {
+        var cfg = await _hashtags.GetByIdAsync(hashtagConfigId, ct);
+        if (cfg is null)
+            return NotFound();
+
+        var items = await _media.ListByHashtagAsync(hashtagConfigId, ct);
+        var zip = await _zipExport.BuildZipAsync(items, ct);
+        if (zip is null)
+            return NotFound(new { error = "no_downloadable_media" });
+
+        var fileName = $"fotos-{cfg.NormalizedHashtag}-{DateTime.UtcNow:yyyyMMdd}.zip";
+        return File(zip, "application/zip", fileName);
     }
 
     [HttpPost("media/{postId:guid}/approve")]

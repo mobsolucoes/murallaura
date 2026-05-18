@@ -7,6 +7,7 @@ export default function ModerationPage() {
   const { id } = useParams<{ id: string }>()
   const [items, setItems] = useState<InstagramMediaPost[]>([])
   const [loading, setLoading] = useState(true)
+  const [downloading, setDownloading] = useState(false)
   const [selected, setSelected] = useState<string[]>([])
 
   async function reload() {
@@ -65,6 +66,34 @@ export default function ModerationPage() {
     await reload()
   }
 
+  async function downloadAllPhotos() {
+    if (!id) return
+    setDownloading(true)
+    try {
+      const { data, headers } = await api.get<Blob>(`/api/admin/hashtags/${id}/media/download`, {
+        responseType: 'blob',
+      })
+      const disposition = headers['content-disposition'] as string | undefined
+      const match = disposition?.match(/filename="?([^";]+)"?/i)
+      const fileName = match?.[1] ?? `fotos-${id}.zip`
+      const url = URL.createObjectURL(data)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status
+      if (status === 404) {
+        window.alert('Nenhuma foto disponível para download.')
+      } else {
+        window.alert('Não foi possível baixar as fotos. Tente novamente.')
+      }
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   const statusLabel = (s: number) => {
     if (s === 1) return 'Aprovada'
     if (s === 2) return 'Rejeitada'
@@ -106,6 +135,14 @@ export default function ModerationPage() {
           </button>
           <button type="button" className="btn secondary" onClick={() => syncNow()}>
             Buscar agora (Instagram)
+          </button>
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={() => downloadAllPhotos()}
+            disabled={downloading || items.length === 0}
+          >
+            {downloading ? 'Preparando ZIP…' : 'Baixar todas as fotos'}
           </button>
           <Link className="btn ghost" to={`/hashtags/${id}/wall`}>
             Visual do mural
